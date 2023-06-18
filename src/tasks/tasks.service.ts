@@ -5,6 +5,7 @@ import { Task } from './task.entity';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { TasksRepository } from './tasks.repository';
 import { InjectRepository } from '@nestjs/typeorm';
+import { User } from 'src/auth/user.entity';
 
 @Injectable()
 export class TasksService {
@@ -15,21 +16,27 @@ export class TasksService {
     private readonly tasksRepository: TasksRepository,
   ) {}
 
-  async getTasks(status?: TaskStatus, keyword?: string): Promise<Task[]> {
-    const tasks = await this.tasksRepository.getTasks(status, keyword);
+  async getTasks(
+    user: User,
+    status?: TaskStatus,
+    keyword?: string,
+  ): Promise<Task[]> {
+    const tasks = await this.tasksRepository.getTasks(user, status, keyword);
     return tasks;
   }
 
-  createTask(createTaskDto: CreateTaskDto): Task {
-    const task = this.tasksRepository.create({ ...createTaskDto });
+  createTask(createTaskDto: CreateTaskDto, user: User): Task {
+    const task = this.tasksRepository.create({ ...createTaskDto, user: user });
     task.status = TaskStatus.OPEN;
     this.tasksRepository.save(task);
     return task;
   }
 
-  async deleteTask(id: string): Promise<void> {
+  async deleteTask(id: string, user: User): Promise<void> {
+    console.log(user)
+    console.log(id)
     if (this.checkIfValidUUID(id)) {
-      const result = await this.tasksRepository.delete({ id: id });
+      const result = await this.tasksRepository.delete({ id: id, user: user });
       if(result.affected < 1){
         throw new NotFoundException(`did not find the object with id ${id}`);
       }
@@ -38,7 +45,7 @@ export class TasksService {
     }
   }
 
-  async getTaskById(id: string): Promise<Task> {
+  async getTaskById(id: string, user: User): Promise<Task> {
     if (!this.checkIfValidUUID(id)) {
       throw new BadRequestException();
     }
@@ -53,11 +60,15 @@ export class TasksService {
   async updateTask(
     id: string,
     updateTaskStatusDto: UpdateTaskStatusDto,
+    user: User,
   ): Promise<Task> {
+    console.log(user)
     if (!this.checkIfValidUUID(id)) {
       throw new BadRequestException(`id ${id} is not uuid`);
     }
-    const task = await this.getTaskById(id);
+    const task = await this.getTaskById(id, user);
+    console.log(task)
+
     task.status = updateTaskStatusDto.status;
     this.tasksRepository.save(task);
     return task;
