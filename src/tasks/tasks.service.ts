@@ -25,10 +25,10 @@ export class TasksService {
     return tasks;
   }
 
-  createTask(createTaskDto: CreateTaskDto, user: User): Task {
+  async createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
     const task = this.tasksRepository.create({ ...createTaskDto, user: user });
     task.status = TaskStatus.OPEN;
-    this.tasksRepository.save(task);
+    await this.tasksRepository.save(task);
     return task;
   }
 
@@ -37,7 +37,7 @@ export class TasksService {
     console.log(id)
     if (this.checkIfValidUUID(id)) {
       const result = await this.tasksRepository.delete({ id: id, user: user });
-      if(result.affected < 1){
+      if (result.affected < 1) {
         throw new NotFoundException(`did not find the object with id ${id}`);
       }
     } else {
@@ -73,11 +73,11 @@ export class TasksService {
     this.tasksRepository.save(task);
     return task;
   }
-  
-   private checkIfValidUUID(str): boolean {
+
+  private checkIfValidUUID(str): boolean {
     // Regular expression to check if string is a valid UUID
     const regexExp = /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/gi;
-  
+
     return regexExp.test(str);
   }
 }

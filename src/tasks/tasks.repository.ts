@@ -1,8 +1,5 @@
-import { Injectable } from '@nestjs/common';
 import { User } from 'src/auth/user.entity';
 import { EntityRepository, Repository } from 'typeorm';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { GetTaskWithFilterDto } from './dto/get-task-filter.dto';
 import { TaskStatus } from './task-status.enum';
 import { Task } from './task.entity';
 @EntityRepository(Task)
@@ -28,4 +25,3 @@ export class TasksRepository extends Repository<Task> {
     return tasks;
   }
 }
-4
