@@ -13,6 +13,7 @@ export class TransformInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => {
         return instanceToPlain(data);
-      }))
-    }
+      }),
+    );
   }
+}
