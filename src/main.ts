@@ -12,7 +12,8 @@ async function bootstrap() {
   const config = new DocumentBuilder().setVersion('1.0').build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  await app.listen(3000);
-  Logger.log('the app started listeining on port 3000');
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  Logger.log(`the app started listeining on port ${port}`);
 }
 bootstrap();
