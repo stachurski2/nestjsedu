@@ -5,6 +5,7 @@ import { AuthModule } from '../../auth/auth.module';
 import { TasksController } from '../../tasks/tasks.controller';
 import { TasksRepository } from '../../tasks/tasks.repository';
 import { TasksService } from '../../tasks/tasks.service';
+import { TaskStatus } from '../../tasks/task-status.enum';
 
 const mockTasksRepository = () => ({
   getTasks: jest.fn(),
@@ -15,6 +16,13 @@ const mockUsersRepository = () => ({
   getTasks: jest.fn(),
   findOne: jest.fn(),
 });
+
+const mockUser = {
+  id: 'testId',
+  username: 'testUsername',
+  password: 'testPassword',
+  tasks: [],
+};
 
 describe('TaskController', () => {
   let taskController: TasksController;
@@ -36,8 +44,22 @@ describe('TaskController', () => {
   });
 
   describe('root', () => {
-    it('some test example!"', () => {
-      expect(true).toBe(true);
+    it('check get tasks call"', async () => {
+      taskRepository.getTasks.mockResolvedValue('someValue');
+      const someTaskStatus = TaskStatus.OPEN
+      const someTaskKeyword = 'someKeyword'
+
+      expect(taskRepository.getTasks).not.toHaveBeenCalled();
+      const result = await taskController.getTasks(
+        { status: someTaskStatus, keyword: someTaskKeyword },
+        mockUser,
+      );
+      expect(result).toEqual('someValue');
+      expect(taskRepository.getTasks).toHaveBeenCalledWith(
+        mockUser,
+        someTaskStatus,
+        someTaskKeyword,
+      );
     });
   });
 });
