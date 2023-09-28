@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthCredentialsDto } from './dto/authCredentials.dto';
 import { UsersRepository } from './users.repository';
@@ -15,16 +15,23 @@ export class AuthService {
   ) {}
 
   async signUp(authCredientialsDto: AuthCredentialsDto) {
-    const salt = await bcrypt.genSalt();
-    const hashedpassword = await bcrypt.hash(
-      authCredientialsDto.password,
-      salt,
-    );
-    authCredientialsDto.password = hashedpassword;
-    this.logger.verbose(
-      `signup with credientials ${JSON.stringify(authCredientialsDto)}`,
-    );
-    return this.usersRepository.createUser(authCredientialsDto);
+    const user = await this.usersRepository.findOne({
+      username: authCredientialsDto.username,
+    });
+    if (user) {
+      throw new ConflictException('user already exits');
+    } else {
+      const salt = await bcrypt.genSalt();
+      const hashedpassword = await bcrypt.hash(
+        authCredientialsDto.password,
+        salt,
+      );
+      authCredientialsDto.password = hashedpassword;
+      this.logger.verbose(
+        `signup with credientials ${JSON.stringify(authCredientialsDto)}`,
+      );
+      return this.usersRepository.createUser(authCredientialsDto);
+    }
   }
 
   async signIn(
