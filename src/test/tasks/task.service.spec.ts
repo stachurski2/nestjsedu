@@ -1,11 +1,14 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { TaskStatus } from '../../tasks/task-status.enum';
 import { TasksRepository } from '../../tasks/tasks.repository';
 import { TasksService } from '../../tasks/tasks.service';
 
 const mockTasksRepository = () => ({
   getTasks: jest.fn(),
   findOne: jest.fn(),
+  create: jest.fn(),
+  save: jest.fn(),
 });
 
 const mockUser = {
@@ -58,6 +61,32 @@ describe('TaskService', () => {
       expect(taskService.getTaskById('someId', mockUser)).rejects.toThrow(
         BadRequestException,
       );
+    });
+  });
+  
+  describe('createTask', () => {
+    it('with success', async () => {
+      const testId = 'someId';
+      const taskTitle = 'testTitle';
+      const taskDescription = 'testDescription';
+
+     expect(taskRepository.create).not.toHaveBeenCalled();
+      taskRepository.create.mockResolvedValue({
+        id: testId,
+        title: taskTitle,
+        description: taskDescription,
+        status: undefined,
+      });
+
+      const result = await taskService.createTask( 
+        { title: taskTitle, description: taskDescription },
+        mockUser,
+      );
+      expect(taskRepository.create).toHaveBeenCalled();
+      expect(result.id).toEqual(testId);
+      expect(result.title).toEqual(taskTitle);
+      expect(taskRepository.save).toHaveBeenCalled();
+      expect(result.status).toEqual(TaskStatus.OPEN);
     });
   });
 });

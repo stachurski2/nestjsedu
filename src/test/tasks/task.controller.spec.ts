@@ -6,10 +6,14 @@ import { TasksController } from '../../tasks/tasks.controller';
 import { TasksRepository } from '../../tasks/tasks.repository';
 import { TasksService } from '../../tasks/tasks.service';
 import { TaskStatus } from '../../tasks/task-status.enum';
+import { BadRequestException } from '@nestjs/common';
+import { Task } from 'src/tasks/task.entity';
 
 const mockTasksRepository = () => ({
   getTasks: jest.fn(),
   findOne: jest.fn(),
+  save: jest.fn(),
+  create: jest.fn(),
 });
 
 const mockUsersRepository = () => ({
@@ -36,7 +40,7 @@ describe('TaskController', () => {
         TasksService,
         { provide: TasksRepository, useFactory: mockTasksRepository },
         AuthModule,
-        { provide: UsersRepository, useFactory: mockUsersRepository },
+        { provide: UsersRepository, useFactory: mockUsersRepository }
       ],
     }).compile();
     taskController = await module.get(TasksController)
@@ -46,8 +50,8 @@ describe('TaskController', () => {
   describe('root', () => {
     it('check get tasks call"', async () => {
       taskRepository.getTasks.mockResolvedValue('someValue');
-      const someTaskStatus = TaskStatus.OPEN
-      const someTaskKeyword = 'someKeyword'
+      const someTaskStatus = TaskStatus.OPEN;
+      const someTaskKeyword = 'someKeyword';
 
       expect(taskRepository.getTasks).not.toHaveBeenCalled();
       const result = await taskController.getTasks(
@@ -60,6 +64,49 @@ describe('TaskController', () => {
         someTaskStatus,
         someTaskKeyword,
       );
+    });
+
+    it('check get task with id call"', async () => {
+      taskRepository.findOne.mockResolvedValue('someValue');
+
+      expect(taskRepository.findOne).not.toHaveBeenCalled();
+      const result = await taskController.getTaskById(
+        '8a6e0804-2bd0-4672-b79d-d97027f9071a',
+        mockUser,
+      );
+      expect(result).toEqual('someValue');
+      expect(taskRepository.findOne).toHaveBeenCalledWith(
+        '8a6e0804-2bd0-4672-b79d-d97027f9071a',
+      );
+    });
+    it('check get task with bad id call with failure result', async () => {
+      expect(taskRepository.findOne).not.toHaveBeenCalled();
+      expect(taskController.getTaskById('someId', mockUser)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('create task with id call"', async () => {
+      const testId = 'someId';
+      const taskTitle = 'testTitle';
+      const taskDescription = 'testDescription';
+
+      expect(taskRepository.save).not.toHaveBeenCalled();
+      taskRepository.create.mockResolvedValue({
+        id: testId,
+        title: taskTitle,
+        description: taskDescription,
+        status: undefined,
+      });
+
+      const result = await taskController.createTask(
+        { title: 'testTile', description: 'testDescription'},
+        mockUser,
+      );
+      expect(result.id).toEqual(testId);
+      expect(result.title).toEqual(taskTitle);
+      expect(taskRepository.save).toHaveBeenCalled();
+      expect(result.status).toEqual(TaskStatus.OPEN);
     });
   });
 });

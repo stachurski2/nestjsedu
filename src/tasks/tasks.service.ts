@@ -33,7 +33,10 @@ export class TasksService {
   }
 
   async createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
-    const task = this.tasksRepository.create({ ...createTaskDto, user: user });
+    const task = await this.tasksRepository.create({
+      ...createTaskDto,
+      user: user,
+    });
     task.status = TaskStatus.OPEN;
     this.logger.verbose(
       `create task with dto:${JSON.stringify(createTaskDto)} for user ${
