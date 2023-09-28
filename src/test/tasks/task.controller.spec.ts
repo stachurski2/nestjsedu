@@ -7,13 +7,13 @@ import { TasksRepository } from '../../tasks/tasks.repository';
 import { TasksService } from '../../tasks/tasks.service';
 import { TaskStatus } from '../../tasks/task-status.enum';
 import { BadRequestException } from '@nestjs/common';
-import { Task } from 'src/tasks/task.entity';
 
 const mockTasksRepository = () => ({
   getTasks: jest.fn(),
   findOne: jest.fn(),
   save: jest.fn(),
   create: jest.fn(),
+  delete: jest.fn(),
 });
 
 const mockUsersRepository = () => ({
@@ -107,6 +107,33 @@ describe('TaskController', () => {
       expect(result.title).toEqual(taskTitle);
       expect(taskRepository.save).toHaveBeenCalled();
       expect(result.status).toEqual(TaskStatus.OPEN);
+    });
+
+    it('delete task with id call"', async () => {
+      const testId = '8a6e0804-2bd0-4672-b79d-d97027f9071a';
+      taskRepository.delete.mockResolvedValue({
+        id: testId,
+      });
+      expect(taskRepository.delete).not.toHaveBeenCalled();
+      await taskController.deleteTask(testId, mockUser);
+      expect(taskRepository.delete).toHaveBeenCalled();
+    });
+
+    it('update task with id call"', async () => {
+      const testId = '8a6e0804-2bd0-4672-b79d-d97027f9071a';
+      taskRepository.findOne.mockResolvedValue({
+        id: testId,
+      });
+      expect(taskRepository.findOne).not.toHaveBeenCalled();
+      expect(taskRepository.save).not.toHaveBeenCalled();
+      const result = await taskController.updateTaskStatus(
+        testId,
+        { status: TaskStatus.DONE },
+        mockUser,
+      );
+      expect(taskRepository.findOne).toHaveBeenCalled();
+      expect(taskRepository.save).toHaveBeenCalled();
+      expect(result.status).toEqual(TaskStatus.DONE);
     });
   });
 });
